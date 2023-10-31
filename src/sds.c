@@ -56,7 +56,7 @@ static inline int sdsHdrSize(char type) {
     }
     return 0;
 }
-
+// 检查应该用什么类型的 sds来存储数据
 static inline char sdsReqType(size_t string_size) {
     if (string_size < 1<<5)
         return SDS_TYPE_5;
@@ -86,13 +86,28 @@ static inline char sdsReqType(size_t string_size) {
  * You can print the string with printf() as there is an implicit \0 at the
  * end of the string. However the string is binary safe and can contain
  * \0 characters in the middle, as the length is stored in the sds header. */
+/*
+使用“init”指针指定的内容和'initlen' 创建新的 sds 字符串。
+如果“init”使用的是NULL，则字符串将以零字节初始化。
+如果使用了 SDS_NOINIT，则缓冲区将保持未初始化状态；
+字符串总是以 null 结尾（所有 sds 字符串都是这样），所以
+即使您使用以下命令创建了 sds 字符串：
+mystring = sdsnewlen("abc",3);
+你可以用 printf() 打印字符串，因为字符串末尾有一个隐式的 \0。
+字符串末尾。但是字符串是二进制安全的，可以包含
+中间有 0 个字符，因为长度存储在 sds 标头中
+*/
+
 sds sdsnewlen(const void *init, size_t initlen) {
     void *sh;
     sds s;
+    // 检查 sds 底层存储数据的类型
     char type = sdsReqType(initlen);
     /* Empty strings are usually created in order to append. Use type 8
      * since type 5 is not good at this. */
+    // 通常创建空字符串是为了追加（字符串）。此处使用SDS_TYPE_8，因为SDS_TYPE_5在这方面不擅长。
     if (type == SDS_TYPE_5 && initlen == 0) type = SDS_TYPE_8;
+    
     int hdrlen = sdsHdrSize(type);
     unsigned char *fp; /* flags pointer. */
 

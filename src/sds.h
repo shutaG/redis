@@ -44,6 +44,8 @@ typedef char *sds;
 
 /* Note: sdshdr5 is never used, we just access the flags byte directly.
  * However is here to document the layout of type 5 SDS strings. */
+// struct __attribute__ ((__packed__)) ，紧凑的内存方式分配内存，即使一个变量的大小不到 8 个字节，编译器也会给它分配 8 个字节。
+// sdshdr5 永远不会被使用，我们只是直接访问标志字节。然而，这里记录了5型SDS字符串的布局。
 struct __attribute__ ((__packed__)) sdshdr5 {
     unsigned char flags; /* 3 lsb of type, and 5 msb of string length */
     char buf[];
