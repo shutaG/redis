@@ -1,88 +1,24 @@
-本仓库是 *redis5.0.8* 的源码导读.
+This README is just a fast *quick start* document. You can find more detailed documentation at [redis.io](https://redis.io).
 
-redis源码结构概览
+What is Redis?
 --------------
 
-``` text
-.
-├── 00-RELEASENOTES
-├── BUGS
-├── CONTRIBUTING
-├── COPYING
-├── INSTALL
-├── MANIFESTO
-├── Makefile
-├── README.md
-├── deps  # 包含了 Redis 依赖的第三方代码库，其内模块可以单独编译，可以独立迭代
-│   ├── Makefile
-│   ├── README.md
-│   ├── hiredis	# c语言版本的redis客户端
-│   ├── jemalloc	# 用来替代glibc库，提高内存分配效率
-│   ├── linenoise	# 
-│   ├── lua
-│   └── update-jemalloc.sh
-├── redis.conf	# redis实例的配置文件
-├── runtest
-├── runtest-cluster
-├── runtest-moduleapi
-├── runtest-sentinel
-├── sentinel.conf	# 哨兵的配置文件
-├── src	# redis所有的功能模块
-│   ├── Makefile
-│   ├── modules	# modules的示例代码
-│   ├── networking.c	# 客户端的创建、消息回复等功能
-│   ├── server.c	# 主体控制流程及main入口
-│   ├── ae.c,ae_epoll.c，ae_evport.c，ae_kqueue.c # 网络通信框架
-│   ├── anet.c	# tcp网络通信
-│   ├── db.c	# crul的实现
-│   ├── zmalloc.c # 内存分配
-│   ├── expire.c	# 内存回收
-│   ├── lazyfree.c	# 异步删除
-│   ├── evict.c	# 数据替换策略：lru、lfu
-│   ├── rdb.c # 内存快照
-│   ├── aof.c	# aof日志
-│   ├── redis-check-rdb.c	# 内存快照完整性检查
-│   ├── redis-check-aof.c	# aof日志完整性检查
-│   ├── replication.c	# 主从复制
-│   ├── sentinel.c	# 哨兵、集群故障恢复
-│   ├── cluster.c	# 集群（高可用报障）
-│   ├── latency.c	# 操作延迟监控
-│   ├── slowlog.c	# 慢命令记录
-│   ├── redis-benchmark.c # redis性能评测
-│   ├── ...
-│   ├── ...   # 各个功能模块的源码
+Redis is often referred as a *data structures* server. What this means is that Redis provides access to mutable data structures via a set of commands, which are sent using a *server-client* model with TCP sockets and a simple protocol. So different processes can query and modify the same data structures in a shared way.
 
-├── tests	# 功能测试与单元测试，测试支撑的子目录
-│   ├── assets
-│   ├── cluster	# 集群
-│   ├── helpers
-│   ├── instances.tcl
-│   ├── integration	# 主从
-│   ├── modules
-│   ├── sentinel	# 哨兵
-│   ├── support
-│   ├── test_helper.tcl
-│   ├── tmp
-│   └── unit	# 单元测试
-└── utils	# 辅助性功能
-    ├── build-static-symbols.tcl
-    ├── cluster_fail_time.tcl
-    ├── corrupt_rdb.c
-    ├── create-cluster	# 集群创建
-    ├── generate-command-help.rb
-    ├── graphs
-    ├── hashtable	# rehash过程可视化代码
-    ├── hyperloglog	# hyperloglog误差率计算和展示
-    ├── install_server.sh
-    ├── lru	# lru算法效果展示
-    ├── redis-copy.rb
-    ├── redis-sha1.rb
-    ├── redis_init_script
-    ├── redis_init_script.tpl
-    ├── releasetools
-    ├── speed-regression.tcl
-    └── whatisdoing.sh
-```
+Data structures implemented into Redis have a few special properties:
+
+* Redis cares to store them on disk, even if they are always served and modified into the server memory. This means that Redis is fast, but that is also non-volatile.
+* Implementation of data structures stress on memory efficiency, so data structures inside Redis will likely use less memory compared to the same data structure modeled using an high level programming language.
+* Redis offers a number of features that are natural to find in a database, like replication, tunable levels of durability, cluster, high availability.
+
+Another good example is to think of Redis as a more complex version of memcached, where the operations are not just SETs and GETs, but operations to work with complex data types like Lists, Sets, ordered data structures, and so forth.
+
+If you want to know more, this is a list of selected starting points:
+
+* Introduction to Redis data types. http://redis.io/topics/data-types-intro
+* Try Redis directly inside your browser. http://try.redis.io
+* The full list of Redis commands. http://redis.io/commands
+* There is much more inside the Redis official documentation. http://redis.io/documentation
 
 Building Redis
 --------------
