@@ -224,47 +224,68 @@ void sdsclear(sds s) {
  *
  * Note: this does not change the *length* of the sds string as returned
  * by sdslen(), but only the free buffer space we have. */
-sds sdsMakeRoomFor(sds s, size_t addlen) {
+// s:原字符串，addlen:需要增加的长度
+// 如果s的长度不变，则增加长度
+// retrurn:返回新的s
+ sds sdsMakeRoomFor(sds s, size_t addlen) {
     void *sh, *newsh;
+    // 获取s的剩余的未用空间长度
     size_t avail = sdsavail(s);
     size_t len, newlen;
+    // s[-1]代表，s指针前的一位，即sdshdr的type
+    // type进行了定义，oldtype 进行了赋值;
     char type, oldtype = s[-1] & SDS_TYPE_MASK;
     int hdrlen;
 
     /* Return ASAP if there is enough space left. */
+    // 空间足够则直接返回
     if (avail >= addlen) return s;
 
+    // 获取原长度
     len = sdslen(s);
+    // 获取s字符串头指针
     sh = (char*)s-sdsHdrSize(oldtype);
+    // 新长度
     newlen = (len+addlen);
+
+    // 小于最大预分配长度，则扩大两倍，否则增加最大预分配长度
     if (newlen < SDS_MAX_PREALLOC)
         newlen *= 2;
     else
         newlen += SDS_MAX_PREALLOC;
-
+    // 获取新差好感度对应的sds类型
     type = sdsReqType(newlen);
 
     /* Don't use type 5: the user is appending to the string and type 5 is
      * not able to remember empty space, so sdsMakeRoomFor() must be called
      * at every appending operation. */
+    // SDS_TYPE_5没有用来记录空间的字段，不利于追加操作，所以不使用
+    // 问题：1. 无法知道原因的空间长度  2. 每次追加操作时都可能需要重新分配内存。
     if (type == SDS_TYPE_5) type = SDS_TYPE_8;
-
+    // 获取新字符串头长度
     hdrlen = sdsHdrSize(type);
     if (oldtype==type) {
+        // 返回扩容后的头指针
         newsh = s_realloc(sh, hdrlen+newlen+1);
         if (newsh == NULL) return NULL;
+        // s指向扩容后的字符串起始位置
         s = (char*)newsh+hdrlen;
     } else {
         /* Since the header size changes, need to move the string forward,
          * and can't use realloc */
         newsh = s_malloc(hdrlen+newlen+1);
         if (newsh == NULL) return NULL;
+        // 复制原字符串内容到新字符串中
         memcpy((char*)newsh+hdrlen, s, len+1);
+        // 释放旧的内容
         s_free(sh);
         s = (char*)newsh+hdrlen;
+        // 设置flag
         s[-1] = type;
+        // 设置长度，注意：是原长度，不是新的长度
         sdssetlen(s, len);
     }
+    // 将容量设置为扩容后的容量
     sdssetalloc(s, newlen);
     return s;
 }
@@ -417,13 +438,18 @@ sds sdsgrowzero(sds s, size_t len) {
  *
  * After the call, the passed sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
+// 目标字符串 s、要追加的字符串 t 、要追加的长度 len
 sds sdscatlen(sds s, const void *t, size_t len) {
+    //获取目标字符串s的当前长度
     size_t curlen = sdslen(s);
-
+    //根据要追加的长度len和目标字符串s的现有长度，判断是否要增加新的空间
     s = sdsMakeRoomFor(s,len);
     if (s == NULL) return NULL;
+    //将字符串t的内容复制到s的末尾
     memcpy(s+curlen, t, len);
+    //更新s的长度
     sdssetlen(s, curlen+len);
+    //在s的末尾添加一个结束字符
     s[curlen+len] = '\0';
     return s;
 }
