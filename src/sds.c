@@ -89,30 +89,52 @@ static inline char sdsReqType(size_t string_size) {
 sds sdsnewlen(const void *init, size_t initlen) {
     void *sh;
     sds s;
+    // 根据不同的长度，设置不同的sds类型
     char type = sdsReqType(initlen);
     /* Empty strings are usually created in order to append. Use type 8
      * since type 5 is not good at this. */
+    /*
+    SDS_TYPE_5 是一种优化的 SDS（Simple Dynamic String）类型，
+    它的长度信息直接编码在结构体的标志位中，没有单独的 len 和 alloc 字段来记录当前长度和分配的总空间。
+    因此，当需要频繁追加数据时，SDS_TYPE_5 需要频繁转换为其他类型（如 SDS_TYPE_8），增加了额外开销。
+    */
     if (type == SDS_TYPE_5 && initlen == 0) type = SDS_TYPE_8;
+    // 获取不同sds头部需要的内存空间
     int hdrlen = sdsHdrSize(type);
     unsigned char *fp; /* flags pointer. */
 
+    // 新建SDS结构，并分配内存空间：头+字符体+“\0”(用来兼容c的普通输出),
     sh = s_malloc(hdrlen+initlen+1);
+    // 如果init为SDS_NOINIT，则不初始化内存
     if (init==SDS_NOINIT)
         init = NULL;
     else if (!init)
+        // 将申请的内存块初始化为0
         memset(sh, 0, hdrlen+initlen+1);
+    // 不要设置值时,直接结束
     if (sh == NULL) return NULL;
+    
+    // (char*)sh代表sh的起始地址
+    // s代表 SDS 字符数组的指针
     s = (char*)sh+hdrlen;
+    // fp是字符数组的前一字节
     fp = ((unsigned char*)s)-1;
     switch(type) {
         case SDS_TYPE_5: {
+            // 将initlen移动SDS_TYPE_BITS位后，和type进行按位或运算，
+            // 将type和长度信息放在一个字节中
+            // 为什么和其他的逻辑不一样？：减少小字符的占用
             *fp = type | (initlen << SDS_TYPE_BITS);
             break;
         }
         case SDS_TYPE_8: {
-            SDS_HDR_VAR(8,s);
+            // 将*sh定义为sdshdr8类型的指针
+            SDS_HDR_VAR(8,s); 
+            // 在sds初始化的时候，字符串长度与分配的空间大小相同
             sh->len = initlen;
             sh->alloc = initlen;
+            // 前一位，设置类型。
+            // 思考：不放在sh中，是因为需要提前判断sd的类型，才能读取sd中的数据，所以额外用一个位表示
             *fp = type;
             break;
         }
@@ -139,6 +161,7 @@ sds sdsnewlen(const void *init, size_t initlen) {
         }
     }
     if (initlen && init)
+        // c语言中的标准函数，用于字符串复制
         memcpy(s, init, initlen);
     s[initlen] = '\0';
     return s;

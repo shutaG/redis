@@ -80,6 +80,11 @@ struct __attribute__ ((__packed__)) sdshdr64 {
 #define SDS_TYPE_64 4
 #define SDS_TYPE_MASK 7
 #define SDS_TYPE_BITS 3
+// 宏定义的作用是在预处理阶段将宏的定义替换为宏的内容。在这个宏中，SDS_HDR_VAR 是宏名，T 和 s 是宏的参数。
+// struct sdshdr##T：## 是预处理器的连接运算符，用于将 sdshdr 和宏参数 T 拼接成一个完整的结构体类型名称。例如，struct sdshdr8。
+// *sh：这是一个指向结构体的指针变量，用于存储计算后的结构体指针。
+// (void *)：这是一个类型转换，将计算结果强制转换为 void * 类型。这是因为指针运算的结果可能是一个通用指针，需要转换为目标类型。
+// (s) - (sizeof(struct sdshdr##T))：s 是字符串的指针，sizeof(struct sdshdr##T) 是结构体的大小。通过减去结构体的大小，可以得到字符串头结构体的起始地址。
 #define SDS_HDR_VAR(T,s) struct sdshdr##T *sh = (void*)((s)-(sizeof(struct sdshdr##T)));
 #define SDS_HDR(T,s) ((struct sdshdr##T *)((s)-(sizeof(struct sdshdr##T))))
 #define SDS_TYPE_5_LEN(f) ((f)>>SDS_TYPE_BITS)
