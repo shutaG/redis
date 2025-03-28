@@ -45,14 +45,20 @@
 #define DICT_NOTUSED(V) ((void) V)
 
 typedef struct dictEntry {
-    void *key;
+    // 执行key的指针
+    void *key;  
+
+    // union允许其内的多种类型，使用同一块内存
+    // 当值为uint64_t、int64_t、double等类型时，因为值空间与指针空间相同，因此无需专门用指针指向值，而是直接存储值
+    // 疑问：那如何判断存的是指针还是值呢？
     union {
-        void *val;
+        void *val;  // 指向实际值的指针
         uint64_t u64;
         int64_t s64;
         double d;
-    } v;
-    struct dictEntry *next;
+    } v;    // 值
+    // 下一个节点,hash冲突时，用来组成链
+    struct dictEntry *next; 
 } dictEntry;
 
 typedef struct dictType {
@@ -67,8 +73,8 @@ typedef struct dictType {
 /* This is our hash table structure. Every dictionary has two of this as we
  * implement incremental rehashing, for the old to the new table. */
 typedef struct dictht {
-    dictEntry **table;
-    unsigned long size;
+    dictEntry **table;  // 一维数组：**table代表?
+    unsigned long size; // 哈希表的大小
     unsigned long sizemask;
     unsigned long used;
 } dictht;
@@ -76,7 +82,11 @@ typedef struct dictht {
 typedef struct dict {
     dictType *type;
     void *privdata;
+
+    // 两个哈希表，以便rehash
     dictht ht[2];
+
+    // rehashidx状态标识符
     long rehashidx; /* rehashing not in progress if rehashidx == -1 */
     unsigned long iterators; /* number of iterators currently running */
 } dict;
